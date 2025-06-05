@@ -1,5 +1,5 @@
 # Readme File
-
+This is the code repository associated with "Minimizing the Arithmetic and Communication Complexity of Jacobi's Method for Eigenvalues and Singular Values" by James Demmel, Hengrui Luo, Ryan Schneider, Yifu Wang, available at [https://arxiv.org/abs/2506.03466](https://arxiv.org/abs/2506.03466).
 # Code Organization and Usage
 The code has been tested with MATLAB R2024a, on an AMD Ryzen 9 7945HX CPU with Radeon Graphics.
 
@@ -247,12 +247,13 @@ If you use our code, please refer to
 [LICENSE](https://github.com/hrluo/RecursiveJacobi/blob/master/LICENSE) and please cite our paper using following BibTeX item (we need to change this once submitted):
 
     @article{2025recursivejacobi,
-        title={Recursive Jacobi Methods},
-        author={James W. Demmel, Hengrui Luo, Ryan Schneider, Yifu Wang},
-        year={2025},
-        eprint={https://arxiv.org/abs/xxxx.yyyy},
-        archivePrefix={arXiv},
-        primaryClass={math.LA}
+      title={Minimizing the Arithmetic and Communication Complexity of Jacobi's Method for Eigenvalues and Singular Values}, 
+      author={James Demmel and Hengrui Luo and Ryan Schneider and Yifu Wang},
+      year={2025},
+      eprint={2506.03466},
+      archivePrefix={arXiv},
+      primaryClass={math.NA},
+      url={https://arxiv.org/abs/2506.03466}, 
     }
 
 Thank you again for the interest and please reach out if you have further questions.
