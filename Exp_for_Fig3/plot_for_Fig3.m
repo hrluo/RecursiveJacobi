@@ -93,6 +93,11 @@ results_blockjacobi(5).history = sweep_OffNorm_history_adv_random;
 results_blockjacobi(5).time = time_adv_random;
 
 %% Plotting
+% % plot size (shorten version)
+% fig_width = 1210;   % Width of the figure window in pixels
+% fig_height = 400;   % Height of the figure window in pixels
+% margin_px = 75;     % Desired margin around the plot (in pixels)
+
 % plot size
 fig_width = 1210;   % Width of the figure window in pixels
 fig_height = 600;   % Height of the figure window in pixels
@@ -148,6 +153,7 @@ for i = 1:length(results_blockjacobi)
         text(1.1*flops(end), max_off(end), num2str(unique_sweeps(end)), ...
             'Color', colors(i,:), 'FontSize', 10, 'FontWeight', 'bold', ...
             'HorizontalAlignment', 'center');
+    % 0.3 * max_off(end) for shorten version
     elseif i == 4
         text(0.99*flops(end), 0.5 * max_off(end), num2str(unique_sweeps(end)), ...
         'Color', colors(i,:), 'FontSize', 10, 'FontWeight', 'bold', ...

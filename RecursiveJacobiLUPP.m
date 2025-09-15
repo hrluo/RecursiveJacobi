@@ -131,7 +131,7 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history, new_break_flag] = ...
                     Q(:, rows) = Q(:, rows) * Q_hat;
     
                     % Update total flops
-                    flops = flops + 3 * (2 * b)^2 * n + flops_perm;
+                    flops = flops + 3 * 2 * n * size(A_hat, 1)^2 + flops_perm;
                 end
                 
             end

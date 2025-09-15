@@ -5,6 +5,8 @@ rng(seed);
 
 % Example usage
 n_size = 512;
+% n_size = 2048;
+fprintf('n_size = %d\n', n_size);
 num_blocks_values = [4, 8, 16, 32];  % Different num_blocks values for Block Jacobi
 f_values = [0.2, 0.4, 0.6, 0.8];  % Different f values for Recursive Jacobi
 
@@ -14,6 +16,8 @@ A = (A + A') / 2;  % Make A symmetric
 
 % Set parameters
 n_threshold = 4;
+% n_threshold = 64;
+fprintf('n_threshold = %d\n', n_threshold);
 eps_threshold = 1e-7 * max(max(abs(A)));
 n3_ratio = Inf;   % Ensure convergence for every method
 
@@ -87,7 +91,7 @@ end
 %% Plotting
 % === Set layout dimensions ===
 W_tile = 1200;   % Width of each tile
-H_tile = 600;   % Height of each tile
+H_tile = 300;   % Height of each tile
 layout = [2, 1];
 num_rows = layout(1);
 num_cols = layout(2);
@@ -265,4 +269,9 @@ for col = 1:1
     
     xlim([7e8, 4e11]);
     ylim([1e-8, 1e1]);
+
+    % Store the data
+    save('Fig2_machine_512.mat');
+    savefig('Fig2_machine_512.fig');
+    close(gcf);
 end

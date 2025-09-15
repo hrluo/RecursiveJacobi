@@ -56,7 +56,7 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = classicalJacobi(A, eps_t
                         theta_rad = atan((2 * A(i, j)) / (A(i, i) - A(j, j))) / 2;
                         cos_theta = cos(theta_rad);
                         sin_theta = sin(theta_rad);
-                        R = [cos_theta, sin_theta; -sin_theta, cos_theta];
+                        R = [cos_theta, -sin_theta; sin_theta, cos_theta];
                     elseif strcmp(method, 'adversarial')
                         % We still do trigonometric transformation, but
                         % we deliberately set the rotation angle to be
@@ -64,15 +64,15 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = classicalJacobi(A, eps_t
                         theta_rad = (atan((2 * A(i, j)) / (A(i, i) - A(j, j))) + pi) / 2;
                         cos_theta = cos(theta_rad);
                         sin_theta = sin(theta_rad);
-                        R = [cos_theta, sin_theta; -sin_theta, cos_theta];
+                        R = [cos_theta, -sin_theta; sin_theta, cos_theta];
                     else
                         error("Unknown method. Use 'eig', 'trig', or 'adversarial'.");
                     end
 
                     % Apply rotation to A and Q for indices (i, j)
-                    A([i, j], :) = R * A([i, j], :);
-                    A(:, [i, j]) = A(:, [i, j]) * R';
-                    Q(:, [i, j]) = Q(:, [i, j]) * R';
+                    A([i, j], :) = R' * A([i, j], :);
+                    A(:, [i, j]) = A(:, [i, j]) * R;
+                    Q(:, [i, j]) = Q(:, [i, j]) * R;
 
                     % Symmetrize A to ensure convergence
                     A = (A + A') / 2;

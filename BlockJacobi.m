@@ -126,18 +126,16 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = BlockJacobi(A, blockSize
                         error("Invalid diagonalization method. Choose 'eig', 'qrcp', 'lupp', 'fastLU', or 'random'.");
                 end
     
-                % Update A using block transformation
-                U_full = eye(n);
-                rows = [blockIdx_i, blockIdx_j];
-                cols = [blockIdx_i, blockIdx_j];
-                U_full(rows, cols) = U;
-                A = U_full' * A * U_full;
+                % Update A and Q with block transformations
+                A(rows, :) = U' * A(rows, :);
+                A(:, cols) = A(:, cols) * U;
                 A = (A + A') / 2; % Ensure symmetry
-                flops = flops + 2 * 2 * n * (length(blockIdx_i) + length(blockIdx_j))^2;
-    
-                % Update Q
-                Q = Q * U_full;
-                flops = flops + 2 * n * (length(blockIdx_i) + length(blockIdx_j))^2;
+
+                % Update the corresponding columns of Q
+                Q(:, rows) = Q(:, rows) * U;
+
+                % Update the flops
+                flops = flops + 3 * 2 * n * (length(blockIdx_i) + length(blockIdx_j))^2;
 
             end
         end

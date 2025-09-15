@@ -1,7 +1,13 @@
-n = 1024;
+n = 2048;
 f = 0.8;
 n_threshold = 4;
+fprintf('n = %d\n', n);
+fprintf('f = %.1f\n', f);
+fprintf('n_threshold = %d\n', n_threshold);
+
 structure_array = Reveal_recursive_structure(n, n_threshold, f);
+
+fprintf('Recursion Depth   Input Size   round(n^f)\n');
 disp(structure_array);
 depths = size(structure_array, 1); % Recursion depth
 
