@@ -1,4 +1,4 @@
-function [Q, D, flops, sweeps, sweep_OffNorm_history] = classicalJacobi(A, eps_threshold, method, n3_ratio)
+function [Q, D, flops, sweeps, sweep_OffNorm_history, rotations] = classicalJacobi(A, eps_threshold, method, n3_ratio)
     % Classical (scalar) Jacobi with row-cyclic ordering for the Symmetric Eigenproblem with multiple methods
     % Inputs:
     %   A - symmetric matrix
@@ -24,7 +24,8 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = classicalJacobi(A, eps_t
     Q = eye(n);
     flops = 0;
     sweeps = 0;
-    sweep_OffNorm_history = [flops, sweeps, normOffDiag(A), FroNormOffDiag(A)];
+    rotations = 0;
+    sweep_OffNorm_history = [flops, sweeps, normOffDiag(A), FroNormOffDiag(A), rotations];
 
     % Main iteration loop
     while flops < n3_ratio * n^3
@@ -33,6 +34,7 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = classicalJacobi(A, eps_t
         for i = 1:n-1
             for j = i+1:n
                 if abs(A(i, j)) >= eps_threshold
+                    rotations = rotations + 1;
                     if strcmp(method, 'eig')
                         % Eigen decomposition
                         A_hat = A([i, j], [i, j]);
@@ -86,7 +88,7 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = classicalJacobi(A, eps_t
         % Update sweep_OffNorm_history
         off_diag_norm = normOffDiag(A);
         fro_norm = FroNormOffDiag(A);
-        sweep_OffNorm_history = [sweep_OffNorm_history; flops, sweeps, off_diag_norm, fro_norm];
+        sweep_OffNorm_history = [sweep_OffNorm_history; flops, sweeps, off_diag_norm, fro_norm, rotations];
 
         if off_diag_norm < eps_threshold
             break;

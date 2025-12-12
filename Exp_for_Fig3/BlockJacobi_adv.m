@@ -8,6 +8,7 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = BlockJacobi_adv(A, block
     %   ordering - 'columncyclic' 
     %            - 'rowcyclic'
     %            - 'random'
+    %            - 'anti-diagonal'
     %   pivot_method - 'eig'          % vanilla block Jacobi
     %                - 'qrcp'         % Based on GLOBAL CONVERGENCE PROOF FOR CYCLIC JACOBI METHODS WITH BLOCK ROTATIONS by ZLATKO DRMAČ, 2009.
     %                - 'lupp'         % block Jacobi with LU with partial pivoting
@@ -26,8 +27,8 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = BlockJacobi_adv(A, block
         error('Input matrix must be Hermitian.');
     end
 
-    if ~any(strcmp(ordering, {'columncyclic', 'rowcyclic', 'random'}))
-        error("Pivoting method must be either 'columncyclic', 'rowcyclic', or 'random'.");
+    if ~any(strcmp(ordering, {'columncyclic', 'rowcyclic', 'random', 'anti-diagonal'}))
+        error("Pivoting method must be either 'columncyclic', 'rowcyclic', 'random', or 'anti-diagonal'.");
     end
 
     % Initialize variables
@@ -37,17 +38,22 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = BlockJacobi_adv(A, block
     Q = eye(n);
     flops = 0;
     sweeps = 0;
+    sub_sweeps = 0;
+    rotations = 0;
+    pivotings = 0;
     off_diag_norm = normOffDiag(A);
     fro_norm = FroNormOffDiag(A);
 
     % record history
-    sweep_OffNorm_history = [0, 0, off_diag_norm, fro_norm];
+    sweep_OffNorm_history = [0, 0, off_diag_norm, fro_norm, 0, 0, 0];
     
     % Generate block pairs based on pivot method
     if strcmp(ordering, 'columncyclic')
         blockPairs = generateColumnCyclicPairs(m);
     elseif strcmp(ordering, 'rowcyclic')
         blockPairs = generateRowCyclicPairs(m);
+    elseif strcmp(ordering, 'anti-diagonal')
+        blockPairs = generateAntiDiagonalPairs(m);
     end
 
     % Main loop for block Jacobi iterations
@@ -77,8 +83,10 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = BlockJacobi_adv(A, block
                 % [U, ~] = eig(blockSubMatrix);
                 % flops = flops + (8 + 2/3) * size(blockSubMatrix, 1)^3;
                 % Here we substitue the original eig() with self-written adversarial classical Jacobi to resist convergence
-                [U, ~, adv_flops, ~, ~] = classicalJacobi(blockSubMatrix, eps_threshold, "adversarial", Inf);
+                [U, ~, adv_flops, adv_sweeps, ~, adv_rotations] = classicalJacobi(blockSubMatrix, eps_threshold, "adversarial", Inf);
                 flops = flops + adv_flops;
+                sub_sweeps = sub_sweeps + adv_sweeps;
+                rotations = rotations + adv_rotations;
                 
                 % Update the orthogonal matrix based on different methods we choose
                 switch lower(pivot_method)
@@ -96,6 +104,7 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = BlockJacobi_adv(A, block
                         flops_qr = 2 * n1 * b1^2 - (2 / 3) * b1^3;   % Swap n1, b1 since the matrix is fat and short.
                         flops_perm = 2 * m1 * n1^2;
                         flops = flops + flops_qr + flops_perm;
+                        pivotings = pivotings + 1;
                     case 'lupp'
                         % This is the implementation usnig LUPP instead of QRCP to permute the rotational matrix U
                         b1 = size(blockIdx_i, 2);
@@ -108,6 +117,7 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = BlockJacobi_adv(A, block
                         flops_lu = n1 * b1^2 - (1 / 3) * b1^3;
                         flops_perm = 2 * m1 * n1^2;
                         flops = flops + flops_lu + flops_perm;
+                        pivotings = pivotings + 1;
                     case 'fastlu'
                         % This is the implementation of LUPP using a recursive algorithm, based on Fast Linear Algebra is Stable by James Demmel, Ioana Dumitriu, and Olga Holtz, 2007.
                         b1 = size(blockIdx_i, 2);
@@ -119,6 +129,7 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = BlockJacobi_adv(A, block
                         U = U * P_lupp';
                         flops_perm = 2 * m1 * n1^2;
                         flops = flops + flops_lu + flops_perm;
+                        pivotings = pivotings + 1;
                     case 'random'
                         % randomly permute the rotational matrix, as a comparison to QRCP and LUPP
                         P = eye(size(U, 2));
@@ -145,7 +156,7 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = BlockJacobi_adv(A, block
 
         off_diag_norm = normOffDiag(A);
         fro_norm = FroNormOffDiag(A);
-        sweep_OffNorm_history = [sweep_OffNorm_history; flops, sweeps, off_diag_norm, fro_norm];
+        sweep_OffNorm_history = [sweep_OffNorm_history; flops, sweeps, off_diag_norm, fro_norm, sub_sweeps, rotations, pivotings];
         
         if off_diag_norm < eps_threshold
             break;
@@ -154,6 +165,9 @@ function [Q, D, flops, sweeps, sweep_OffNorm_history] = BlockJacobi_adv(A, block
 
     % Return Diagonal Matrix and Orthonormal Matrix
     D = A;
+    fprintf('Sub-sweeps: %d\n', sub_sweeps);
+    fprintf('Rotations:  %d\n', rotations);
+    fprintf('Pivotings:  %d\n', pivotings);
 end
 
 function blockPairs = generateRowCyclicPairs(m)
@@ -189,4 +203,27 @@ function blockPairs = generateRandomPairs(m)
     numPairs = size(pairs, 1);
     randomOrder = randperm(numPairs);
     blockPairs = pairs(randomOrder, :);
+end
+
+function blockPairs = generateAntiDiagonalPairs(m)
+    % Generate pairs in anti-diagonal (super-diagonal) ordering
+    blockPairs = [];
+
+    % To visualize the ordering, uncomment the three lines related to matrix A.
+    % A = zeros(m,m);
+
+    % for a m-by-m block matrix, the anti-diagonal ordering has m different labels
+    for d = 1 : m
+        % loop over super-diagonals, i.e. 1 <= i < j <= m
+        for i = 1:(m-1)
+            for j = (i+1):m
+                if (i+j == m+2-d) || (i+j == 2*m+2-d)
+                    blockPairs = [blockPairs; i, j];
+                    % A(i,j) = d;
+                end
+            end
+        end
+    end
+
+    % disp(A);
 end
